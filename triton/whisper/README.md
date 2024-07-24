@@ -95,6 +95,7 @@ model_repo_whisper_trtllm
 
 3 directories, 7 files
 ```
+Run
 ```sh
 # We're currently at /workspace/sherpa/triton/whisper
 bash launch_server.sh
