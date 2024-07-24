@@ -5,21 +5,21 @@ Directly launch the service using docker compose.
 ```sh
 docker compose up --build
 ```
-
-### Build Image
+## Steps
+### 1. Build Image
 Build the docker image from scratch. 
 ```sh
 # build from scratch, cd to the parent dir of Dockerfile.server
 docker build . -f Dockerfile.server -t soar97/triton-whisper:24.05
 ```
 
-### Create Docker Container
+### 2. Create Docker Container
 ```sh
 your_mount_dir=/mnt:/mnt
 docker run -it --name "whisper-server" --gpus all --net host -v $your_mount_dir --shm-size=2g soar97/triton-whisper:24.05
 ```
 
-### Export Whisper Model to TensorRT-LLM
+### 3. Export Whisper Model to TensorRT-LLM
 Inside docker container, we would follow the official guide of TensorRT-LLM to build whisper TensorRT-LLM engines. See [here](https://github.com/NVIDIA/TensorRT-LLM/tree/main/examples/whisper).
 
 ```sh
@@ -66,15 +66,19 @@ trtllm-build --checkpoint_dir ${checkpoint_dir}/decoder \
                 --bert_attention_plugin ${INFERENCE_PRECISION} \
                 --gpt_attention_plugin ${INFERENCE_PRECISION} \
                 --remove_input_padding disable
-
-# prepare the model_repo_whisper_trtllm
-cd sherpa/triton/whisper
+```
+### 4. prepare the model_repo_whisper_trtllm
+Inside the same container,
+```
+# Move to the triton whisper dir in sherpa
+cd /workspace/sherpa/triton/whisper
+# Link the whisper we just created from the previous step to the dir
 ln -sv /workspace/TensorRT-LLM/examples/whisper/whisper_large_v3 ./model_repo_whisper_trtllm/whisper/1/
 wget --directory-prefix=./model_repo_whisper_trtllm/whisper/1/ https://raw.githubusercontent.com/openai/whisper/main/whisper/assets/multilingual.tiktoken
 wget --directory-prefix=./model_repo_whisper_trtllm/whisper/1/ assets/mel_filters.npz https://raw.githubusercontent.com/openai/whisper/main/whisper/assets/mel_filters.npz
 ```
 
-### Launch Server
+### 5. Launch Server
 Log of directory tree:
 ```sh
 model_repo_whisper_trtllm
@@ -92,6 +96,7 @@ model_repo_whisper_trtllm
 3 directories, 7 files
 ```
 ```sh
+# We're currently at /workspace/sherpa/triton/whisper
 bash launch_server.sh
 ```
 
@@ -108,6 +113,12 @@ git clone https://huggingface.co/spaces/yuekai/triton-asr-client.git
 cd triton-asr-client
 pip3 install -r requirements.txt
 python3 app.py
+```
+The `Triton Inference Server URL` should be localhost:8001, if not please check output from `bash launch_server.sh` from the step 5. There should be something like this
+```
+I0724 04:21:49.932674 2708 grpc_server.cc:2463] "Started GRPCInferenceService at 0.0.0.0:8001"
+I0724 04:21:49.933224 2708 http_server.cc:4692] "Started HTTPService at 0.0.0.0:10086"
+I0724 04:21:49.975674 2708 http_server.cc:362] "Started Metrics Service at 0.0.0.0:10087"
 ```
 
 ### Benchmark using Dataset
