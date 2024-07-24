@@ -16,3 +16,4 @@ RUN huggingface-cli download --local-dir ./whisper_large_v3_trtllm_triton yuekai
 RUN rm -r ./whisper_large_v3_trtllm_triton/.huggingface
 
 RUN git clone https://github.com/NVIDIA/TensorRT-LLM.git
+RUN git clone https://github.com/k2-fsa/sherpa.git
